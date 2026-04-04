@@ -25,7 +25,7 @@ def main() -> None:
         "buy_hold": buy_hold,
         "sma_20_50": lambda d: sma_crossover(d, 20, 50),
         "sma_50_200": lambda d: sma_crossover(d, 50, 200),
-        "rsi_momentum_55": rsi_threshold,
+        "rsi_55_50": rsi_threshold,
     }
 
     table = compare_strategies(df, strategies, commission_rate=0.0)

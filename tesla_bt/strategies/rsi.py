@@ -14,12 +14,17 @@ def _rsi(close: pd.Series, period: int = 14) -> pd.Series:
 def rsi_threshold(
     df: pd.DataFrame,
     period: int = 14,
-    momentum_above: float = 55.0,
+    entry_level: float = 55.0,
+    exit_level: float = 50.0,
 ) -> tuple[pd.Series, pd.Series]:
-    """Enter when RSI crosses above threshold; exit when it crosses back below."""
+    """
+    Entry when RSI crosses above ``entry_level`` (default 55).
+    Exit when RSI crosses below ``exit_level`` (default 50).
+    """
     rsi = _rsi(df["Close"], period)
-    above = rsi > momentum_above
-    prev_above = above.shift(1).fillna(False)
-    entry = (above & ~prev_above).fillna(False)
-    exit_sig = (~above & prev_above).fillna(False)
-    return entry.astype(bool), exit_sig.astype(bool)
+    prev = rsi.shift(1)
+
+    entry_signal = ((rsi > entry_level) & (prev <= entry_level)).fillna(False).astype(bool)
+    exit_signal = ((rsi < exit_level) & (prev >= exit_level)).fillna(False).astype(bool)
+
+    return entry_signal, exit_signal
