@@ -1,301 +1,267 @@
-# 📊 TSLA Backtesting Engine
+# 📈 Systematic Momentum Research Engine (TSLA Case Study)
 
-## 🚀 Overview
+## 🚀 Project Summary
 
-This project is a modular, extensible backtesting engine built in Python to design, test, and analyze systematic trading strategies. It began as a simple daily backtester and has evolved into a **trade-based simulation engine with realistic execution modeling and an interactive UI**.
+This project is a **systematic trading research platform** designed to develop, test, and validate quantitative strategies under realistic market conditions.
 
-The system is designed to mirror real-world trading conditions as closely as possible while remaining flexible for rapid experimentation and strategy development.
+It goes beyond a basic backtester by focusing on:
 
----
+* **Trade-level simulation**
+* **Execution realism (slippage, commissions)**
+* **Bias-free signal generation**
+* **Risk-adjusted performance evaluation**
 
-## 🎯 Key Objectives
-
-* Build a **reliable and realistic backtesting system**
-* Enable **rapid strategy iteration and validation**
-* Transition from academic models to **practical trading insights**
-* Lay the foundation for **quantitative trading research and potential monetization**
+The system is currently applied to **TSLA as a case study**, with a roadmap toward intraday momentum strategies (e.g., VWAP-based setups).
 
 ---
 
-## 🧠 Core Features
+## 🎯 Research Objective
 
-### 1. Modular Architecture
+To answer a core quantitative question:
 
-The system is structured into clearly separated components:
+> **Can systematic rules generate a repeatable edge after accounting for execution costs and risk?**
 
-```
-tesla_bt/
-│
-├── data.py        # Data loading + validation
-├── engine.py      # Trade-based backtesting engine
-├── strategies/    # Strategy implementations
-├── metrics.py     # Performance analytics
-├── report.py      # Strategy comparison + reporting
-```
+This engine is built to rigorously test that hypothesis through:
 
-This separation allows:
-
-* Easy extension of strategies
-* Independent testing of components
-* Scalability toward more advanced systems
+* Controlled simulations
+* Parameter exploration
+* Trade-level analytics
 
 ---
 
-### 2. Data Handling & Validation
+## 🧠 Key Contributions
 
-* Fetches historical OHLCV data (Yahoo Finance or local CSV)
-* Built-in validation ensures:
+### 1. Trade-Based Backtesting Engine
 
-  * No missing values
-  * Sorted timestamps
-  * No duplicate indices
+Refactored from a traditional position-based model into a **discrete event-driven simulator**.
 
-👉 Prevents **garbage-in, garbage-out errors**
+#### Capabilities:
 
----
+* Entry/exit signal execution
+* Trade lifecycle tracking:
 
-### 3. Trade-Based Backtesting Engine
-
-Refactored from a position-based model into a **discrete trade simulator**.
-
-#### Features:
-
-* Entry/exit signal-based execution
-* Tracks individual trades:
-
-  * Entry/exit time
-  * Entry/exit price
+  * Entry/exit timestamps
+  * Execution prices
   * Return per trade
-* Generates:
+* Equity curve construction from individual trades
 
-  * Equity curve
-  * Return series
-
-#### Why it matters:
-
-This mirrors how traders actually operate, enabling deeper analysis like win rate and expectancy.
+👉 Enables **granular analysis of strategy behavior**, not just aggregate returns
 
 ---
 
-### 4. Realistic Execution Modeling
+### 2. Execution Realism Layer
 
-#### Includes:
+Incorporates real-world frictions often ignored in naive backtests:
 
-* **Commission modeling**
-* **Slippage simulation**
+* **Slippage modeling**
+* **Commission costs**
+* **Intrabar stop-loss / take-profit logic**
+* Conservative fill assumptions
 
-  * Entry: price adjusted upward
-  * Exit: price adjusted downward
-
-#### Risk Management:
-
-* Stop loss support
-* Take profit support
-* Intrabar logic using high/low prices
-* Exit reason tracking:
-
-  * Signal
-  * Stop loss
-  * Take profit
-
-👉 Moves system closer to real-world trading conditions
+👉 Reduces overfitting and improves **out-of-sample reliability**
 
 ---
 
-### 5. Strategy Framework
+### 3. Risk Management Framework
 
-Strategies are fully modular and parameterized.
+Built-in support for:
 
-#### Current implementations:
+* Stop-loss constraints
+* Take-profit targets
+* Trade exit classification:
 
-* Buy & Hold
-* SMA Crossover
-* RSI Threshold
+  * Signal-driven
+  * Risk-driven (stop loss)
+  * Profit-taking
 
-#### Features:
+👉 Allows evaluation of **risk-reward structures and expectancy**
 
-* Each strategy returns:
+---
 
-  * `entry_signal`
-  * `exit_signal`
-* All signals shifted to avoid **lookahead bias**
+### 4. Bias Prevention & Data Integrity
 
-#### Extensibility:
+#### Lookahead Bias Mitigation:
 
-New strategies can be added by implementing a simple function:
+* All signals shifted forward by one bar
+
+#### Data Validation:
+
+* Missing value detection
+* Duplicate timestamp checks
+* Strictly ordered time index enforcement
+
+👉 Ensures **statistical validity of results**
+
+---
+
+### 5. Strategy Abstraction Layer
+
+Strategies are implemented as modular, parameterized functions:
 
 ```python
-def my_strategy(df: pd.DataFrame) -> (pd.Series, pd.Series):
+def strategy(df, **params) -> (entry_signal, exit_signal):
     return entry_signal, exit_signal
 ```
 
+#### Current Strategies:
+
+* Buy & Hold (benchmark)
+* SMA Crossover
+* RSI Momentum Filter
+
+#### Design Benefits:
+
+* Rapid prototyping of new strategies
+* Easy parameter sweeps
+* Plug-and-play extensibility
+
 ---
 
-### 6. Performance Metrics
+### 6. Performance Analytics
 
-#### Portfolio-level:
+#### Portfolio-Level Metrics:
 
 * Total Return
-* CAGR (annualized)
+* CAGR
 * Volatility
 * Sharpe Ratio
 * Max Drawdown
 
-#### Trade-level:
+#### Trade-Level Metrics:
 
 * Win Rate
 * Average Win / Loss
 * Risk-Reward Ratio
 * Expectancy
 
-👉 Enables **quantitative evaluation of edge**
+👉 Focus on **edge quality, not just returns**
 
 ---
 
-### 7. Strategy Comparison Engine
+### 7. Strategy Benchmarking & Comparison
 
-* Runs multiple strategies on identical data
-* Benchmarks against Buy & Hold
-* Ranks based on:
-
-  * Absolute return
-  * Excess return vs benchmark
+* Automatic comparison against Buy & Hold
+* Ranking by **excess return vs benchmark**
+* Consistent evaluation across identical datasets
 
 ---
 
-### 8. Reporting System
+### 8. Interactive Research Interface
 
-* Automatically saves:
-
-  * Trades
-  * Equity curves
-  * Metrics
-* Organized in timestamped directories:
-
-```
-reports/YYYY-MM-DD_HH-MM/
-```
-
----
-
-### 9. Interactive UI (Streamlit App)
-
-A lightweight front-end was built using Streamlit to allow real-time interaction.
-
-#### Features:
+Built with **Streamlit**, enabling:
 
 * Strategy selection
-* Parameter tuning (SMA, RSI, stop loss, etc.)
-* Date range selection
-* One-click backtesting
+* Parameter tuning
+* On-demand backtesting
+* Real-time visualization
 
-#### Visual Outputs:
+#### Outputs:
 
-* Equity curve
-* Metrics table
+* Equity curve (interactive)
 * Trade log
-* Return distributions (optional)
+* Performance metrics
+* Return distributions
 
-👉 Transforms system from script → **interactive research tool**
-
----
-
-## ⚠️ Engineering Challenges Solved
-
-### 1. Lookahead Bias Prevention
-
-* All signals are shifted by one bar
-* Ensures no future data leakage
+👉 Transforms system into a **quant research workstation**
 
 ---
 
-### 2. Execution Realism
+## ⚙️ System Architecture
 
-* Slippage + commissions added
-* Intrabar stop/target handling
-
----
-
-### 3. Trade Integrity
-
-* Validation checks:
-
-  * No overlapping trades
-  * Valid entry/exit sequencing
-  * No missing prices
-
----
-
-### 4. Reproducibility
-
-* Cached datasets
-* Saved reports
-* Deterministic outputs
+```
+tesla_bt/
+│
+├── data.py        # Data ingestion + validation
+├── engine.py      # Trade-based simulation engine
+├── strategies/    # Strategy definitions
+├── metrics.py     # Performance evaluation
+├── report.py      # Strategy comparison
+│
+├── app.py         # Streamlit research interface
+└── run_compare.py # Batch backtesting script
+```
 
 ---
 
-## 📈 Example Workflow
+## 📊 Example Research Workflow
 
-1. Select strategy in UI
-2. Adjust parameters (e.g., RSI thresholds)
-3. Run backtest
+1. Select a strategy (e.g., SMA crossover)
+2. Adjust parameters (e.g., window lengths, stop loss)
+3. Run backtest via UI
 4. Analyze:
 
-   * Equity curve
+   * Equity curve behavior
+   * Drawdown profile
    * Trade distribution
-   * Risk metrics
 5. Iterate and refine
 
 ---
 
-## 🔮 Future Improvements
+## 🔍 Key Insights from Development
 
-* Intraday data integration (Polygon / Alpaca)
-* VWAP-based strategies (momentum focus)
-* Condition-based performance analysis
-* Multi-asset portfolio support
-* Machine learning-based signal generation
-* Deployment as a SaaS platform
+* **Naive strategies degrade significantly** after accounting for slippage and commissions
+* **Win rate alone is misleading** — expectancy and risk-reward are more predictive
+* **Execution assumptions materially impact results**, especially for momentum strategies
+* Trade-level analysis reveals patterns hidden in aggregate metrics
 
 ---
 
-## 💡 Why This Project Matters
+## 🧪 Limitations & Ongoing Work
 
-This project demonstrates:
+* Currently uses **daily data** (intraday integration in progress)
+* Single-asset focus (TSLA case study)
+* No portfolio-level optimization yet
 
-### ✅ Technical Skills
+### Planned Enhancements:
 
-* Python (pandas, numpy)
-* System design & modular architecture
-* Data validation & preprocessing
-* Simulation modeling
+* Intraday data (Polygon / Alpaca)
+* VWAP-based momentum strategies
+* Time-of-day and volatility condition analysis
+* Multi-asset portfolio simulation
+* Walk-forward validation & out-of-sample testing
 
-### ✅ Quantitative Thinking
+---
 
-* Risk-adjusted performance evaluation
-* Trade-level analytics
-* Bias prevention (lookahead, survivorship)
+## 💡 Relevance to Quantitative Trading
 
-### ✅ Product Thinking
+This project demonstrates the ability to:
 
-* Built an interactive tool, not just scripts
-* Designed for real user workflows
-* Clear path to monetization (SaaS / signals / analytics)
+### 🧠 Quantitative Research
+
+* Formulate and test hypotheses
+* Evaluate statistical edge
+* Avoid common biases (lookahead, overfitting)
+
+### ⚙️ Engineering
+
+* Build modular, scalable systems
+* Implement realistic simulation logic
+* Design reusable research infrastructure
+
+### 📉 Risk Awareness
+
+* Model drawdowns and volatility
+* Analyze trade distributions
+* Evaluate robustness under friction
 
 ---
 
 ## 🧩 Key Takeaway
 
-This is not just a backtester.
+This is not a toy backtester.
 
-It is a **foundation for a quantitative research platform** designed to:
+It is a **research-oriented trading system** designed to answer:
 
-* Discover trading edge
-* Validate strategies rigorously
-* Bridge the gap between theory and execution
+> *“Does this strategy still work after reality is applied?”*
 
 ---
 
-## 📌 Author Note
+## 📌 Author Perspective
 
-This project reflects a transition from discretionary trading toward **systematic, data-driven decision making**, with an emphasis on realism, iteration speed, and continuous improvement.
+This project reflects a transition from discretionary trading toward **systematic, data-driven decision-making**, with an emphasis on:
+
+* Realism over optimism
+* Process over outcomes
+* Iteration over intuition
+
+It serves as a foundation for further development into a **production-grade quantitative research platform**.
