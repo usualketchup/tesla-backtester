@@ -20,4 +20,8 @@ def sma_crossover(df: pd.DataFrame, fast: int = 20, slow: int = 50) -> tuple[pd.
         (fast_ma < slow_ma) & (prev_fast >= prev_slow)
     ).fillna(False).astype(bool)
 
+    # Shift signals by one bar so decisions use only prior-bar information (prevents lookahead bias).
+    entry_signal = entry_signal.shift(1).fillna(False).astype(bool)
+    exit_signal = exit_signal.shift(1).fillna(False).astype(bool)
+
     return entry_signal, exit_signal

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -155,6 +156,43 @@ def _execute_entry_at_open(
     )
 
 
+def _warn_trade_anomalies(trades_df: pd.DataFrame) -> None:
+    """Emit warnings for suspicious trade-log anomalies after backtest execution."""
+    if trades_df.empty:
+        return
+
+    required_cols = {"entry_time", "exit_time", "entry_price", "exit_price"}
+    missing_cols = sorted(required_cols.difference(trades_df.columns))
+    if missing_cols:
+        warnings.warn(
+            "Trade validation skipped checks for missing columns: " + ", ".join(missing_cols),
+            stacklevel=2,
+        )
+        return
+
+    if trades_df[["entry_price", "exit_price"]].isna().any().any():
+        warnings.warn(
+            "Trade validation: found missing entry/exit prices in trade log.",
+            stacklevel=2,
+        )
+
+    bad_time_order = (trades_df["entry_time"] >= trades_df["exit_time"]).fillna(True)
+    if bad_time_order.any():
+        warnings.warn(
+            "Trade validation: found trades where entry_time is not earlier than exit_time.",
+            stacklevel=2,
+        )
+
+    ordered = trades_df.sort_values(["entry_time", "exit_time"]).reset_index(drop=True)
+    overlap = ordered["entry_time"] < ordered["exit_time"].shift(1)
+    overlap = overlap.fillna(False)
+    if overlap.any():
+        warnings.warn(
+            "Trade validation: found overlapping trades in trade log.",
+            stacklevel=2,
+        )
+
+
 def run_backtest(
     open_: pd.Series,
     close: pd.Series,
@@ -306,6 +344,7 @@ def run_backtest(
     if not trades_df.empty:
         for col in ("entry_time", "exit_time"):
             trades_df[col] = pd.to_datetime(trades_df[col])
+    _warn_trade_anomalies(trades_df)
 
     return {
         "trades": trades_df,
